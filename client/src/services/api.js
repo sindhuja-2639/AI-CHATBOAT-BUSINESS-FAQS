@@ -12,31 +12,81 @@ const getHeaders = (isFormData = false) => {
   return headers;
 };
 
+const parseErrorMessage = (data, defaultMsg) => {
+  if (!data) return defaultMsg;
+  if (typeof data.detail === 'string') return data.detail;
+  if (Array.isArray(data.detail) && data.detail.length > 0) {
+    return data.detail.map(d => d.msg || d.message || JSON.stringify(d)).join('; ');
+  }
+  if (typeof data.message === 'string') return data.message;
+  return defaultMsg;
+};
+
 export const api = {
   // Auth
   async login(email, password) {
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({ email, password })
-    });
-    return await res.json();
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          email: (email || '').trim().toLowerCase(),
+          password: password || ''
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return {
+          success: false,
+          message: parseErrorMessage(data, 'Invalid email or password. Please check your credentials.')
+        };
+      }
+      return data;
+    } catch (err) {
+      return {
+        success: false,
+        message: 'Could not connect to authentication server. Please verify the backend is running.'
+      };
+    }
   },
 
   async register(email, password, businessName) {
-    const res = await fetch(`${API_BASE}/auth/register`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({ email, password, businessName })
-    });
-    return await res.json();
+    try {
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          email: (email || '').trim().toLowerCase(),
+          password: password || '',
+          business_name: (businessName || '').trim()
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return {
+          success: false,
+          message: parseErrorMessage(data, 'Registration failed. Please check your details.')
+        };
+      }
+      return data;
+    } catch (err) {
+      return {
+        success: false,
+        message: 'Could not connect to authentication server. Please verify the backend is running.'
+      };
+    }
   },
 
   async getMe() {
-    const res = await fetch(`${API_BASE}/auth/me`, {
-      headers: getHeaders()
-    });
-    return await res.json();
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, {
+        headers: getHeaders()
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (err) {
+      return null;
+    }
   },
 
   // FAQs

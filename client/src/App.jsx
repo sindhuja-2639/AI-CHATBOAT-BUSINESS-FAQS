@@ -28,8 +28,10 @@ export default function App() {
 
     try {
       const res = await api.getMe();
-      if (res.success && res.user) {
+      if (res && res.success && res.user) {
         setUser(res.user);
+      } else if (res && (res.id || res.email)) {
+        setUser(res.user || res);
       } else {
         // Clear invalid token
         localStorage.removeItem('token');

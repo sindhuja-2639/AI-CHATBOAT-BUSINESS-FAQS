@@ -13,6 +13,7 @@ class UserLogin(BaseModel):
     password: str
 
 class TokenResponse(BaseModel):
+    success: bool = True
     token: str
     user: dict
 
